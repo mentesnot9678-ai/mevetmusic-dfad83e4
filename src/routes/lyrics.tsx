@@ -69,12 +69,18 @@ function LyricsScreen() {
   // Keep the active line centred by scrolling the lyrics container itself
   // (scrollIntoView would scroll the page instead on mobile).
   useEffect(() => {
+    if (mode !== "scroll") return;
     const box = scrollRef.current;
     const line = activeRef.current;
     if (!box || !line) return;
     const target = line.offsetTop - box.clientHeight / 2 + line.clientHeight / 2;
     box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
-  }, [activeIndex]);
+  }, [activeIndex, mode]);
+
+  const singleLine =
+    activeIndex >= 0 && lyrics?.synced ? lyrics.synced[activeIndex]?.text : "";
+  const alignClass =
+    linePos === "top" ? "justify-start pt-24" : linePos === "bottom" ? "justify-end pb-28" : "justify-center";
 
 
   return (
