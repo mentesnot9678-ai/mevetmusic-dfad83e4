@@ -126,6 +126,46 @@ function LyricsScreen() {
         </div>
 
         <div
+          className={`flex flex-wrap items-center justify-center gap-1.5 px-4 pt-2 transition-opacity duration-300 ${chrome ? "opacity-100" : "pointer-events-none opacity-0"}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {(["scroll", "single"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium ${
+                mode === m ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground"
+              }`}
+            >
+              {m === "scroll" ? "All lines" : "Single line"}
+            </button>
+          ))}
+          {mode === "single"
+            ? (["top", "middle", "bottom"] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPosition(p)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium capitalize ${
+                    linePos === p ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))
+            : null}
+        </div>
+
+        {mode === "single" && lyrics?.synced?.length ? (
+          <div className={`flex min-h-0 flex-1 flex-col px-7 text-center ${alignClass}`}>
+            <p
+              key={activeIndex}
+              className="animate-rise font-display text-2xl font-semibold leading-snug text-foreground"
+            >
+              {singleLine || "···"}
+            </p>
+          </div>
+        ) : (
+        <div
           ref={scrollRef}
           className="no-scrollbar relative min-h-0 flex-1 overflow-y-auto px-7 py-[40vh] text-center"
         >
