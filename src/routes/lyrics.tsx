@@ -38,7 +38,7 @@ function LyricsScreen() {
     bgMedia,
     setBgMedia,
     mode,
-    position,
+    position: linePos,
     setMode,
     setPosition,
   } = useLyrics();
