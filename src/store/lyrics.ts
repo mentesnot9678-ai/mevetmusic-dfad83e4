@@ -3,12 +3,19 @@ import { fetchLyrics, lyricsFromFile, type Lyrics } from "@/lib/lyrics";
 import { loadLyricsCache, saveLyricsToCache } from "@/lib/lyrics-cache";
 import type { Track } from "@/lib/types";
 
+export type LyricsMode = "scroll" | "single";
+export type LyricsPosition = "top" | "middle" | "bottom";
+
 type LyricsState = {
   byTrack: Record<string, Lyrics | null>;
   loading: boolean;
   hydrated: boolean;
   prefetching: boolean;
   bgMedia: { url: string; type: "image" | "video" } | null;
+  mode: LyricsMode;
+  position: LyricsPosition;
+  setMode: (m: LyricsMode) => void;
+  setPosition: (p: LyricsPosition) => void;
   hydrate: () => void;
   load: (track: Track, force?: boolean) => Promise<void>;
   prefetchAll: (tracks: Track[]) => Promise<void>;
