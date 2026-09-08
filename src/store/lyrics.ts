@@ -31,6 +31,20 @@ export const useLyrics = create<LyricsState>((set, get) => ({
   hydrated: false,
   prefetching: false,
   bgMedia: null,
+  mode: (typeof localStorage !== "undefined"
+    ? (localStorage.getItem("lyrics-mode") as LyricsMode | null)
+    : null) ?? "scroll",
+  position: (typeof localStorage !== "undefined"
+    ? (localStorage.getItem("lyrics-position") as LyricsPosition | null)
+    : null) ?? "middle",
+  setMode: (m) => {
+    if (typeof localStorage !== "undefined") localStorage.setItem("lyrics-mode", m);
+    set({ mode: m });
+  },
+  setPosition: (p) => {
+    if (typeof localStorage !== "undefined") localStorage.setItem("lyrics-position", p);
+    set({ position: p });
+  },
   hydrate: () => {
     if (get().hydrated) return;
     set({ byTrack: { ...loadLyricsCache(), ...get().byTrack }, hydrated: true });
