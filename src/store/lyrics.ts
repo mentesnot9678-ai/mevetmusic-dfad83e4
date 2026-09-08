@@ -3,12 +3,19 @@ import { fetchLyrics, lyricsFromFile, type Lyrics } from "@/lib/lyrics";
 import { loadLyricsCache, saveLyricsToCache } from "@/lib/lyrics-cache";
 import type { Track } from "@/lib/types";
 
+export type LyricsMode = "scroll" | "single";
+export type LyricsPosition = "top" | "middle" | "bottom";
+
 type LyricsState = {
   byTrack: Record<string, Lyrics | null>;
   loading: boolean;
   hydrated: boolean;
   prefetching: boolean;
   bgMedia: { url: string; type: "image" | "video" } | null;
+  mode: LyricsMode;
+  position: LyricsPosition;
+  setMode: (m: LyricsMode) => void;
+  setPosition: (p: LyricsPosition) => void;
   hydrate: () => void;
   load: (track: Track, force?: boolean) => Promise<void>;
   prefetchAll: (tracks: Track[]) => Promise<void>;
@@ -24,6 +31,20 @@ export const useLyrics = create<LyricsState>((set, get) => ({
   hydrated: false,
   prefetching: false,
   bgMedia: null,
+  mode: (typeof localStorage !== "undefined"
+    ? (localStorage.getItem("lyrics-mode") as LyricsMode | null)
+    : null) ?? "scroll",
+  position: (typeof localStorage !== "undefined"
+    ? (localStorage.getItem("lyrics-position") as LyricsPosition | null)
+    : null) ?? "middle",
+  setMode: (m) => {
+    if (typeof localStorage !== "undefined") localStorage.setItem("lyrics-mode", m);
+    set({ mode: m });
+  },
+  setPosition: (p) => {
+    if (typeof localStorage !== "undefined") localStorage.setItem("lyrics-position", p);
+    set({ position: p });
+  },
   hydrate: () => {
     if (get().hydrated) return;
     set({ byTrack: { ...loadLyricsCache(), ...get().byTrack }, hydrated: true });

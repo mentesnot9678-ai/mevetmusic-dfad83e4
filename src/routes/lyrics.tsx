@@ -30,7 +30,18 @@ function LyricsScreen() {
   const position = usePlayer((s) => s.position);
   const isPlaying = usePlayer((s) => s.isPlaying);
   const toggle = usePlayer((s) => s.toggle);
-  const { byTrack, loading, load, importFile, bgMedia, setBgMedia } = useLyrics();
+  const {
+    byTrack,
+    loading,
+    load,
+    importFile,
+    bgMedia,
+    setBgMedia,
+    mode,
+    position: linePos,
+    setMode,
+    setPosition,
+  } = useLyrics();
   const online = useOnline();
 
   const [chrome, setChrome] = useState(true);
@@ -58,12 +69,18 @@ function LyricsScreen() {
   // Keep the active line centred by scrolling the lyrics container itself
   // (scrollIntoView would scroll the page instead on mobile).
   useEffect(() => {
+    if (mode !== "scroll") return;
     const box = scrollRef.current;
     const line = activeRef.current;
     if (!box || !line) return;
     const target = line.offsetTop - box.clientHeight / 2 + line.clientHeight / 2;
     box.scrollTo({ top: Math.max(0, target), behavior: "smooth" });
-  }, [activeIndex]);
+  }, [activeIndex, mode]);
+
+  const singleLine =
+    activeIndex >= 0 && lyrics?.synced ? lyrics.synced[activeIndex]?.text : "";
+  const alignClass =
+    linePos === "top" ? "justify-start pt-24" : linePos === "bottom" ? "justify-end pb-28" : "justify-center";
 
 
   return (
@@ -108,6 +125,46 @@ function LyricsScreen() {
           </div>
         </div>
 
+        <div
+          className={`flex flex-wrap items-center justify-center gap-1.5 px-4 pt-2 transition-opacity duration-300 ${chrome ? "opacity-100" : "pointer-events-none opacity-0"}`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {(["scroll", "single"] as const).map((m) => (
+            <button
+              key={m}
+              onClick={() => setMode(m)}
+              className={`rounded-full border px-3 py-1 text-[11px] font-medium ${
+                mode === m ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground"
+              }`}
+            >
+              {m === "scroll" ? "All lines" : "Single line"}
+            </button>
+          ))}
+          {mode === "single"
+            ? (["top", "middle", "bottom"] as const).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPosition(p)}
+                  className={`rounded-full border px-3 py-1 text-[11px] font-medium capitalize ${
+                    linePos === p ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))
+            : null}
+        </div>
+
+        {mode === "single" && lyrics?.synced?.length ? (
+          <div className={`flex min-h-0 flex-1 flex-col px-7 text-center ${alignClass}`}>
+            <p
+              key={activeIndex}
+              className="animate-rise font-display text-2xl font-semibold leading-snug text-foreground"
+            >
+              {singleLine || "···"}
+            </p>
+          </div>
+        ) : (
         <div
           ref={scrollRef}
           className="no-scrollbar relative min-h-0 flex-1 overflow-y-auto px-7 py-[40vh] text-center"
@@ -157,6 +214,7 @@ function LyricsScreen() {
             </div>
           )}
         </div>
+        )}
 
         <p
           className={`pb-8 text-center text-[11px] text-muted-foreground transition-opacity ${chrome ? "opacity-100" : "opacity-0"}`}
