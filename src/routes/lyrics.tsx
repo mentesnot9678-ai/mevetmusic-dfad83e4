@@ -214,6 +214,7 @@ function LyricsScreen() {
             </div>
           )}
         </div>
+        )}
 
         <p
           className={`pb-8 text-center text-[11px] text-muted-foreground transition-opacity ${chrome ? "opacity-100" : "opacity-0"}`}
