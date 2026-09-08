@@ -32,8 +32,14 @@
   --color-ring: var(--ring);
   --color-surface: var(--surface);
   --color-ring-offset-background: var(--background);
+  --color-lyrics-gold: var(--lyrics-gold);
+  --color-lyrics-rose: var(--lyrics-rose);
+  --color-lyrics-sky: var(--lyrics-sky);
+  --color-lyrics-mint: var(--lyrics-mint);
   --font-display: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-lyrics-serif: "Playfair Display", ui-serif, Georgia, serif;
+  --font-lyrics-poster: "Bebas Neue", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
@@ -58,6 +64,11 @@
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 16%);
   --ring: oklch(0.79 0.16 68);
+  --lyrics-gold: oklch(0.86 0.12 85);
+  --lyrics-rose: oklch(0.77 0.14 12);
+  --lyrics-sky: oklch(0.8 0.11 225);
+  --lyrics-mint: oklch(0.82 0.12 165);
+  --lyrics-shadow: oklch(0.05 0 0 / 70%);
   --app-bg-image: none;
   --app-bg-dim: 0.55;
 }
@@ -124,4 +135,34 @@
 
 @utility animate-rise {
   animation: rise 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes lyric-glow {
+  0%, 100% { filter: drop-shadow(0 0 0 transparent); transform: scale(1); }
+  50% { filter: drop-shadow(0 0 14px currentColor); transform: scale(1.025); }
+}
+
+@keyframes lyric-depth-in {
+  from { opacity: 0; transform: perspective(500px) rotateX(12deg) translateY(14px); }
+  to { opacity: 1; transform: perspective(500px) rotateX(0deg) translateY(0); }
+}
+
+@utility lyric-glow {
+  animation: lyric-glow 2.2s ease-in-out infinite;
+}
+
+@utility lyric-depth {
+  animation: lyric-depth-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  text-shadow: 0 1px 0 color-mix(in oklab, currentColor 82%, var(--lyrics-shadow)),
+    0 2px 0 color-mix(in oklab, currentColor 68%, var(--lyrics-shadow)),
+    0 3px 0 color-mix(in oklab, currentColor 54%, var(--lyrics-shadow)),
+    0 7px 12px var(--lyrics-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .lyric-glow,
+  .lyric-depth {
+    animation: none;
+  }
 }
