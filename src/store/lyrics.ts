@@ -5,6 +5,8 @@ import type { Track } from "@/lib/types";
 
 export type LyricsMode = "scroll" | "single";
 export type LyricsPosition = "top" | "middle" | "bottom";
+export type LyricsFont = "modern" | "serif" | "poster";
+export type LyricsEffect = "clean" | "rise" | "glow" | "depth";
 
 type LyricsState = {
   byTrack: Record<string, Lyrics | null>;
@@ -14,8 +16,14 @@ type LyricsState = {
   bgMedia: { url: string; type: "image" | "video" } | null;
   mode: LyricsMode;
   position: LyricsPosition;
+  font: LyricsFont;
+  color: string;
+  effect: LyricsEffect;
   setMode: (m: LyricsMode) => void;
   setPosition: (p: LyricsPosition) => void;
+  setFont: (font: LyricsFont) => void;
+  setColor: (color: string) => void;
+  setEffect: (effect: LyricsEffect) => void;
   hydrate: () => void;
   load: (track: Track, force?: boolean) => Promise<void>;
   prefetchAll: (tracks: Track[]) => Promise<void>;
@@ -24,6 +32,7 @@ type LyricsState = {
 };
 
 const inFlight = new Set<string>();
+const STYLE_KEY = "mevet.lyrics-style";
 
 export const useLyrics = create<LyricsState>((set, get) => ({
   byTrack: {},
@@ -31,12 +40,11 @@ export const useLyrics = create<LyricsState>((set, get) => ({
   hydrated: false,
   prefetching: false,
   bgMedia: null,
-  mode: (typeof localStorage !== "undefined"
-    ? (localStorage.getItem("lyrics-mode") as LyricsMode | null)
-    : null) ?? "scroll",
-  position: (typeof localStorage !== "undefined"
-    ? (localStorage.getItem("lyrics-position") as LyricsPosition | null)
-    : null) ?? "middle",
+  mode: "scroll",
+  position: "middle",
+  font: "serif",
+  color: "#f8fafc",
+  effect: "depth",
   setMode: (m) => {
     if (typeof localStorage !== "undefined") localStorage.setItem("lyrics-mode", m);
     set({ mode: m });
@@ -45,9 +53,53 @@ export const useLyrics = create<LyricsState>((set, get) => ({
     if (typeof localStorage !== "undefined") localStorage.setItem("lyrics-position", p);
     set({ position: p });
   },
+  setFont: (font) => {
+    const next = { font, color: get().color, effect: get().effect };
+    if (typeof localStorage !== "undefined") localStorage.setItem(STYLE_KEY, JSON.stringify(next));
+    set({ font });
+  },
+  setColor: (color) => {
+    const next = { font: get().font, color, effect: get().effect };
+    if (typeof localStorage !== "undefined") localStorage.setItem(STYLE_KEY, JSON.stringify(next));
+    set({ color });
+  },
+  setEffect: (effect) => {
+    const next = { font: get().font, color: get().color, effect };
+    if (typeof localStorage !== "undefined") localStorage.setItem(STYLE_KEY, JSON.stringify(next));
+    set({ effect });
+  },
   hydrate: () => {
     if (get().hydrated) return;
-    set({ byTrack: { ...loadLyricsCache(), ...get().byTrack }, hydrated: true });
+    let mode: LyricsMode = "scroll";
+    let position: LyricsPosition = "middle";
+    let font: LyricsFont = "serif";
+    let color = "#f8fafc";
+    let effect: LyricsEffect = "depth";
+    if (typeof localStorage !== "undefined") {
+      mode = (localStorage.getItem("lyrics-mode") as LyricsMode | null) ?? mode;
+      position = (localStorage.getItem("lyrics-position") as LyricsPosition | null) ?? position;
+      try {
+        const saved = JSON.parse(localStorage.getItem(STYLE_KEY) ?? "{}") as {
+          font?: LyricsFont;
+          color?: string;
+          effect?: LyricsEffect;
+        };
+        font = saved.font ?? font;
+        color = saved.color ?? color;
+        effect = saved.effect ?? effect;
+      } catch {
+        /* keep cinematic defaults */
+      }
+    }
+    set({
+      byTrack: { ...loadLyricsCache(), ...get().byTrack },
+      hydrated: true,
+      mode,
+      position,
+      font,
+      color,
+      effect,
+    });
   },
   load: async (track, force = false) => {
     get().hydrate();

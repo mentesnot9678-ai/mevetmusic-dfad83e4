@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Image as ImageIcon, Pause, Play, Upload, X } from "lucide-react";
+import { Image as ImageIcon, Pause, Play, Type, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { usePlayer } from "@/store/player";
 import { useLyrics } from "@/store/lyrics";
@@ -39,12 +39,19 @@ function LyricsScreen() {
     setBgMedia,
     mode,
     position: linePos,
+    font,
+    color,
+    effect,
     setMode,
     setPosition,
+    setFont,
+    setColor,
+    setEffect,
   } = useLyrics();
   const online = useOnline();
 
   const [chrome, setChrome] = useState(true);
+  const [stylesOpen, setStylesOpen] = useState(false);
   const lrcRef = useRef<HTMLInputElement>(null);
   const bgRef = useRef<HTMLInputElement>(null);
   const activeRef = useRef<HTMLParagraphElement>(null);
@@ -81,6 +88,17 @@ function LyricsScreen() {
     activeIndex >= 0 && lyrics?.synced ? lyrics.synced[activeIndex]?.text : "";
   const alignClass =
     linePos === "top" ? "justify-start pt-24" : linePos === "bottom" ? "justify-end pb-28" : "justify-center";
+  const fontClass =
+    font === "serif" ? "font-lyrics-serif" : font === "poster" ? "font-lyrics-poster uppercase" : "font-display";
+  const effectClass =
+    effect === "rise" ? "animate-rise" : effect === "glow" ? "lyric-glow" : effect === "depth" ? "lyric-depth" : "";
+  const colorChoices = [
+    { name: "Pearl", value: "#f8fafc", className: "bg-foreground" },
+    { name: "Gold", value: "#f4d06f", className: "bg-lyrics-gold" },
+    { name: "Rose", value: "#f59aae", className: "bg-lyrics-rose" },
+    { name: "Sky", value: "#82d8f5", className: "bg-lyrics-sky" },
+    { name: "Mint", value: "#77e6bd", className: "bg-lyrics-mint" },
+  ];
 
 
   return (
@@ -119,11 +137,77 @@ function LyricsScreen() {
             <button onClick={() => bgRef.current?.click()} aria-label="Set background" className="p-2">
               <ImageIcon className="size-5" />
             </button>
+            <button
+              onClick={() => setStylesOpen((open) => !open)}
+              aria-label="Change lyric text style"
+              aria-expanded={stylesOpen}
+              className={`rounded-lg p-2 transition-colors ${stylesOpen ? "bg-foreground/15" : ""}`}
+            >
+              <Type className="size-5" />
+            </button>
             <button onClick={toggle} aria-label={isPlaying ? "Pause" : "Play"} className="p-2">
               {isPlaying ? <Pause className="size-5" /> : <Play className="size-5" />}
             </button>
           </div>
         </div>
+
+        {stylesOpen && chrome ? (
+          <div
+            className="glass mx-4 mt-3 space-y-3 rounded-2xl border border-border p-3 shadow-2xl animate-in fade-in slide-in-from-top-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="grid grid-cols-3 gap-1 rounded-xl bg-background/30 p-1" aria-label="Lyric font">
+              {([
+                ["modern", "Modern", "font-display"],
+                ["serif", "Cinematic", "font-lyrics-serif"],
+                ["poster", "Poster", "font-lyrics-poster"],
+              ] as const).map(([value, label, sampleClass]) => (
+                <button
+                  key={value}
+                  onClick={() => setFont(value)}
+                  className={`min-h-10 rounded-lg px-2 text-xs transition-colors ${sampleClass} ${font === value ? "bg-foreground text-background" : "text-foreground/65"}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-[10px] font-semibold uppercase text-muted-foreground">Color</span>
+              <div className="flex items-center gap-2">
+                {colorChoices.map((choice) => (
+                  <button
+                    key={choice.name}
+                    onClick={() => setColor(choice.value)}
+                    aria-label={`${choice.name} lyrics`}
+                    title={choice.name}
+                    className={`size-7 rounded-full border-2 ${choice.className} ${color === choice.value ? "border-foreground" : "border-transparent"}`}
+                  />
+                ))}
+                <label className="relative size-7 overflow-hidden rounded-full border-2 border-border" title="Custom lyric color">
+                  <span className="absolute inset-1 rounded-full bg-[conic-gradient(var(--color-lyrics-rose),var(--color-lyrics-gold),var(--color-lyrics-mint),var(--color-lyrics-sky),var(--color-lyrics-rose))]" />
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={(e) => setColor(e.target.value)}
+                    aria-label="Custom lyric color"
+                    className="absolute inset-0 cursor-pointer opacity-0"
+                  />
+                </label>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-1" aria-label="Lyric animation">
+              {(["clean", "rise", "glow", "depth"] as const).map((value) => (
+                <button
+                  key={value}
+                  onClick={() => setEffect(value)}
+                  className={`rounded-lg border px-2 py-2 text-[11px] font-medium capitalize transition-colors ${effect === value ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground"}`}
+                >
+                  {value === "depth" ? "3D" : value}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <div
           className={`flex flex-wrap items-center justify-center gap-1.5 px-4 pt-2 transition-opacity duration-300 ${chrome ? "opacity-100" : "pointer-events-none opacity-0"}`}
@@ -159,7 +243,8 @@ function LyricsScreen() {
           <div className={`flex min-h-0 flex-1 flex-col px-7 text-center ${alignClass}`}>
             <p
               key={activeIndex}
-              className="animate-rise font-display text-2xl font-semibold leading-snug text-foreground"
+              className={`${fontClass} ${effectClass} text-3xl font-semibold leading-snug`}
+              style={{ color }}
             >
               {singleLine || "···"}
             </p>
@@ -180,11 +265,12 @@ function LyricsScreen() {
                 <p
                   key={`${line.time}-${i}`}
                   ref={i === activeIndex ? activeRef : undefined}
-                  className={`font-display text-xl leading-snug transition-all duration-300 ${
+                   className={`${fontClass} text-xl leading-snug transition-all duration-300 ${
                     i === activeIndex
-                      ? "scale-[1.03] text-foreground"
+                       ? `scale-[1.03] ${effectClass}`
                       : "text-foreground/35 blur-[0.4px]"
                   }`}
+                   style={i === activeIndex ? { color } : undefined}
                 >
                   {line.text || "···"}
                 </p>
