@@ -30,7 +30,18 @@ function LyricsScreen() {
   const position = usePlayer((s) => s.position);
   const isPlaying = usePlayer((s) => s.isPlaying);
   const toggle = usePlayer((s) => s.toggle);
-  const { byTrack, loading, load, importFile, bgMedia, setBgMedia } = useLyrics();
+  const {
+    byTrack,
+    loading,
+    load,
+    importFile,
+    bgMedia,
+    setBgMedia,
+    mode,
+    position,
+    setMode,
+    setPosition,
+  } = useLyrics();
   const online = useOnline();
 
   const [chrome, setChrome] = useState(true);
